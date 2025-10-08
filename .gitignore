@@ -29,14 +29,12 @@ wheels/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
-# Media files
-/media/*
-!/media/.gitkeep
-!/media/*/.gitkeep
-!/media/*/*/.gitkeep
-# Migrations (keep __init__.py but ignore migration files)
-**/migrations/*.py
-!**/migrations/__init__.py
+/media/posts/*
+/media/avatars/*
+/media/stories/*
+!/media/posts/.gitkeep
+!/media/avatars/.gitkeep
+!/media/stories/.gitkeep
 
 
 # IDE
