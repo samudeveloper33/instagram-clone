@@ -1,0 +1,312 @@
+{% extends 'base.html' %}
+{% block content %}
+  <!-- Instagram-style Search Panel -->
+  <div class="top-0 h-screen w-full md:w-96 bg-white border-r border-gray-300 z-50 overflow-hidden flex flex-col shadow-xl">
+    <!-- Header -->
+    <div class="p-6 pb-4">
+      <h1 class="text-2xl font-bold text-gray-900 mb-6">Search</h1>
+      
+      <!-- Search Input -->
+      <div class="relative">
+        <input 
+          type="text" 
+          name="q" 
+          id="searchInput"
+          value="{{ query }}" 
+          placeholder="Search" 
+          autocomplete="off"
+          class="w-full px-4 py-2 bg-gray-100 rounded-lg border-none focus:outline-none text-sm"
+          style="font-size: 16px;"
+        />
+        <button type="button" id="clearBtn" onclick="clearSearch()" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <div class="border-t border-gray-200"></div>
+
+    <!-- Results Section -->
+    <div class="flex-1 overflow-y-auto">
+      {% if query %}
+        <!-- Search Results -->
+        {% if search_results %}
+          <div class="py-2">
+            {% for user in search_results %}
+              <div class="flex items-center px-6 py-2.5 hover:bg-gray-50 transition-colors group">
+                <a href="{% url 'profile' user.username %}" class="flex items-center flex-1 min-w-0">
+                  <!-- Profile Picture -->
+                  {% if user.profile.profile_picture %}
+                    <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}" class="w-11 h-11 rounded-full object-cover flex-shrink-0" />
+                  {% else %}
+                    <div class="w-11 h-11 bg-gradient-to-br from-purple-600 to-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span class="text-white text-sm font-semibold">{{ user.username|first|upper }}</span>
+                    </div>
+                  {% endif %}
+                  
+                  <!-- User Info -->
+                  <div class="ml-3 flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-gray-900 truncate">{{ user.username }}</p>
+                    {% if user.first_name or user.last_name %}
+                      <p class="text-sm text-gray-500 truncate">{{ user.first_name }} {{ user.last_name }}</p>
+                    {% else %}
+                      <p class="text-sm text-gray-500 truncate">Instagram User</p>
+                    {% endif %}
+                  </div>
+                </a>
+                
+                <!-- Follow Button -->
+                <div class="ml-2 flex-shrink-0">
+                  {% if user.is_following %}
+                    <form method="POST" action="{% url 'unfollow_user' user.username %}" class="inline">
+                      {% csrf_token %}
+                      <button type="submit" class="px-4 py-1.5 bg-gray-200 text-gray-800 text-sm font-semibold rounded-lg hover:bg-gray-300 transition-colors">
+                        Following
+                      </button>
+                    </form>
+                  {% elif user.has_pending_request %}
+                    <span class="px-4 py-1.5 bg-gray-200 text-gray-800 text-sm font-semibold rounded-lg cursor-not-allowed inline-block">
+                      Requested
+                    </span>
+                  {% else %}
+                    <form method="POST" action="{% url 'send_follow_request' user.username %}" class="inline">
+                      {% csrf_token %}
+                      <button type="submit" class="px-4 py-1.5 bg-blue-500 text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors">
+                        Follow
+                      </button>
+                    </form>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <!-- No Results -->
+          <div class="flex flex-col items-center justify-center py-20 px-6">
+            <div class="text-center">
+              <p class="text-sm font-semibold text-gray-900 mb-1">No results found</p>
+              <p class="text-xs text-gray-500">Try searching for people</p>
+            </div>
+          </div>
+        {% endif %}
+      {% else %}
+        <!-- Recent Searches -->
+        {% if recent_searches %}
+          <div class="px-6 py-4">
+            <div class="flex items-center justify-between mb-5">
+              <h2 class="text-base font-semibold text-gray-900">Recent</h2>
+              <form method="POST" action="{% url 'clear_recent_searches' %}" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="text-sm font-semibold text-blue-500 hover:text-blue-700" onclick="return confirm('Clear all recent searches?')">Clear all</button>
+              </form>
+            </div>
+            <div class="space-y-1">
+              {% for search in recent_searches %}
+                <div class="flex items-center py-2 hover:bg-gray-50 transition-colors group rounded-lg px-2">
+                  <a href="{% url 'profile' search.searched_user.username %}" class="flex items-center flex-1 min-w-0">
+                    <!-- Profile Picture -->
+                    {% if search.searched_user.profile.profile_picture %}
+                      <img src="{{ search.searched_user.profile.profile_picture.url }}" alt="{{ search.searched_user.username }}" class="w-11 h-11 rounded-full object-cover flex-shrink-0" />
+                    {% else %}
+                      <div class="w-11 h-11 bg-gradient-to-br from-purple-600 to-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span class="text-white text-sm font-semibold">{{ search.searched_user.username|first|upper }}</span>
+                      </div>
+                    {% endif %}
+                    
+                    <!-- User Info -->
+                    <div class="ml-3 flex-1 min-w-0">
+                      <p class="text-sm font-semibold text-gray-900 truncate">{{ search.searched_user.username }}</p>
+                      {% if search.searched_user.first_name or search.searched_user.last_name %}
+                        <p class="text-sm text-gray-500 truncate">{{ search.searched_user.first_name }} {{ search.searched_user.last_name }}</p>
+                      {% else %}
+                        <p class="text-sm text-gray-500 truncate">Instagram User</p>
+                      {% endif %}
+                    </div>
+                  </a>
+                  
+                  <!-- Remove Button (X) -->
+                  <form method="POST" action="{% url 'remove_recent_search' search.searched_user.username %}" class="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {% csrf_token %}
+                    <button type="submit" class="p-2 hover:bg-gray-100 rounded-full">
+                      <svg class="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+        
+        <!-- Suggested Users -->
+        {% if suggested_users %}
+          <div class="px-6 py-4 {% if recent_searches %}border-t border-gray-200{% endif %}">
+            <div class="mb-5">
+              <h2 class="text-base font-semibold text-gray-900">Suggested for you</h2>
+            </div>
+            <div class="space-y-1">
+              {% for user in suggested_users %}
+                <div class="flex items-center py-2 hover:bg-gray-50 transition-colors group rounded-lg px-2">
+                  <a href="{% url 'profile' user.username %}" class="flex items-center flex-1 min-w-0">
+                    <!-- Profile Picture -->
+                    {% if user.profile.profile_picture %}
+                      <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}" class="w-11 h-11 rounded-full object-cover flex-shrink-0" />
+                    {% else %}
+                      <div class="w-11 h-11 bg-gradient-to-br from-purple-600 to-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span class="text-white text-sm font-semibold">{{ user.username|first|upper }}</span>
+                      </div>
+                    {% endif %}
+                    
+                    <!-- User Info -->
+                    <div class="ml-3 flex-1 min-w-0">
+                      <p class="text-sm font-semibold text-gray-900 truncate">{{ user.username }}</p>
+                      {% if user.first_name or user.last_name %}
+                        <p class="text-sm text-gray-500 truncate">{{ user.first_name }} {{ user.last_name }}</p>
+                      {% else %}
+                        <p class="text-sm text-gray-500 truncate">Suggested for you</p>
+                      {% endif %}
+                    </div>
+                  </a>
+                  
+                  <!-- Follow Button -->
+                  <div class="ml-2 flex-shrink-0">
+                    {% if user.has_pending_request %}
+                      <span class="px-4 py-1.5 bg-gray-200 text-gray-800 text-sm font-semibold rounded-lg cursor-not-allowed inline-block">
+                        Requested
+                      </span>
+                    {% else %}
+                      <form method="POST" action="{% url 'send_follow_request' user.username %}" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="px-4 py-1.5 bg-blue-500 text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors">
+                          Follow
+                        </button>
+                      </form>
+                    {% endif %}
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+        
+        <!-- Empty State -->
+        {% if not recent_searches and not suggested_users %}
+          <div class="px-6 py-4">
+            <div class="flex items-center justify-between mb-5">
+              <h2 class="text-base font-semibold text-gray-900">Recent</h2>
+              <button class="text-sm font-semibold text-blue-500 hover:text-blue-700 opacity-50 cursor-not-allowed">Clear all</button>
+            </div>
+            <div class="flex flex-col items-center justify-center py-16">
+              <p class="text-sm text-gray-500 text-center">No recent searches</p>
+            </div>
+          </div>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Overlay for mobile -->
+  <div class="md:hidden fixed inset-0 bg-black bg-opacity-50 z-30" onclick="window.history.back()"></div>
+
+  <style>
+    /* Custom scrollbar for search panel */
+    .overflow-y-auto::-webkit-scrollbar {
+      width: 6px;
+    }
+    .overflow-y-auto::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .overflow-y-auto::-webkit-scrollbar-thumb {
+      background: #d1d5db;
+      border-radius: 10px;
+    }
+    .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+      background: #9ca3af;
+    }
+    
+    /* Mobile full screen */
+    @media (max-width: 768px) {
+      .fixed.left-0.top-0 {
+        width: 100vw !important;
+      }
+    }
+    
+    /* Hover effect for items */
+    .group:hover a {
+      text-decoration: none;
+    }
+    
+    /* Search input styling */
+    #searchInput {
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    
+    #searchInput:focus {
+      background-color: #f3f4f6;
+    }
+  </style>
+
+  <script>
+    // Auto-submit search form as user types
+    const searchInput = document.getElementById('searchInput');
+    const clearBtn = document.getElementById('clearBtn');
+    let searchTimeout;
+
+    function clearSearch() {
+      searchInput.value = '';
+      clearBtn.classList.add('hidden');
+      window.location.href = '{% url "search" %}';
+    }
+
+    if (searchInput) {
+      searchInput.addEventListener('input', function(e) {
+        const query = e.target.value.trim();
+        
+        // Show/hide clear button
+        if (query.length > 0) {
+          clearBtn.classList.remove('hidden');
+        } else {
+          clearBtn.classList.add('hidden');
+        }
+        
+        // Clear previous timeout
+        if (searchTimeout) {
+          clearTimeout(searchTimeout);
+        }
+        
+        // Wait 1000ms after user stops typing before navigating
+        searchTimeout = setTimeout(() => {
+          if (query.length >= 2) {
+            window.location.href = '{% url "search" %}?q=' + encodeURIComponent(query);
+          } else if (query.length === 0 && '{{ query }}') {
+            window.location.href = '{% url "search" %}';
+          }
+        }, 1000);
+      });
+
+      // Prevent Enter key from doing anything
+      searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          if (searchTimeout) {
+            clearTimeout(searchTimeout);
+          }
+          const query = e.target.value.trim();
+          if (query.length >= 1) {
+            window.location.href = '{% url "search" %}?q=' + encodeURIComponent(query);
+          }
+        }
+      });
+      
+      // Show clear button if there's a query
+      if (searchInput.value.length > 0) {
+        clearBtn.classList.remove('hidden');
+      }
+    }
+  </script>
+{% endblock %}

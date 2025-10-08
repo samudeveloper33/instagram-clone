@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="bg-gray-50 min-h-screen w-full max-w-full overflow-x-hidden">
+    <div class="w-full max-w-full px-2 md:px-4 lg:px-8 py-4 md:py-8 overflow-x-hidden">
+      <div class="max-w-2xl mx-auto">
+        <!-- Header -->
+        <div class="bg-white border border-gray-300 rounded-lg p-6 mb-6">
+          <h1 class="text-xl font-semibold mb-2">Suggested For You</h1>
+          <p class="text-gray-600 text-sm">Discover people you may know or might be interested in following.</p>
+        </div>
+
+        <!-- Suggested Users List -->
+        {% if suggested_users %}
+          <div class="bg-white border border-gray-300 rounded-lg overflow-hidden">
+            {% for user in suggested_users %}
+              <div class="p-4 border-b border-gray-100 last:border-b-0">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-4">
+                    {% if user.profile.profile_picture %}
+                      <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}" class="w-14 h-14 rounded-full object-cover" />
+                    {% else %}
+                      <div class="w-14 h-14 bg-gradient-to-br from-purple-600 to-blue-500 rounded-full flex items-center justify-center">
+                        <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                        </svg>
+                      </div>
+                    {% endif %}
+                    <div>
+                      <a href="{% url 'profile' user.username %}" class="font-semibold text-sm hover:underline">{{ user.username }}</a>
+                      {% if user.first_name %}
+                        <p class="text-gray-500 text-xs">{{ user.first_name }} {{ user.last_name }}</p>
+                      {% endif %}
+                      {% if user.profile.bio %}
+                        <p class="text-gray-600 text-xs mt-1">{{ user.profile.bio|truncatewords:8 }}</p>
+                      {% endif %}
+                      <div class="flex items-center text-xs text-gray-400 mt-1">
+                        <span>{{ user.profile.followers_count }} followers</span>
+                        {% if user.profile.is_private %}
+                          <svg class="w-3 h-3 ml-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                          </svg>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+
+                  <button onclick="followUser('{{ user.username }}')" class="bg-blue-500 text-white text-sm px-4 py-1 rounded-md hover:bg-blue-600 transition-colors follow-btn" data-username="{{ user.username }}">Follow</button>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="bg-white border border-gray-300 rounded-lg p-12 text-center">
+            <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+            </svg>
+            <h3 class="text-lg font-semibold text-gray-700 mb-2">No suggestions available</h3>
+            <p class="text-gray-500">We don't have any user suggestions for you right now. Check back later!</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function followUser(username) {
+      const btn = document.querySelector(`[data-username="${username}"]`)
+      const originalText = btn.textContent
+      btn.textContent = 'Following...'
+      btn.disabled = true
+    
+      fetch(`/follow/send/${username}/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCookie('csrftoken'),
+          'Content-Type': 'application/json'
+        }
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            btn.textContent = 'Requested'
+            btn.className = 'bg-gray-400 text-white text-sm px-4 py-1 rounded-md cursor-not-allowed'
+            btn.disabled = true
+          } else {
+            btn.textContent = originalText
+            btn.disabled = false
+            alert(data.error || 'Error following user')
+          }
+        })
+        .catch((error) => {
+          btn.textContent = originalText
+          btn.disabled = false
+          alert('Error following user')
+        })
+    }
+    
+    function getCookie(name) {
+      let cookieValue = null
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';')
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim()
+          if (cookie.substring(0, name.length + 1) === name + '=') {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1))
+            break
+          }
+        }
+      }
+      return cookieValue
+    }
+  </script>
+{% endblock %}

@@ -1,0 +1,400 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Instagram</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Google Font for Logo -->
+    <link href="https://fonts.googleapis.com/css2?family=Satisfy&display=swap" rel="stylesheet" />
+    {% tailwind_css %}
+
+    <style>
+      .instagram-logo {
+        font-family: 'Satisfy', cursive;
+      }
+      .nav-item {
+        transition: all 0.2s ease-in-out;
+        justify-content: flex-start;
+      }
+      .nav-item:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+      }
+      .nav-item.active {
+        font-weight: 600;
+      }
+      .nav-item.active svg {
+        stroke-width: 2.5;
+      }
+      .nav-text {
+      }
+      .nav-item-mobile {
+      }
+      .nav-item-mobile:active {
+      }
+      .nav-item-mobile.active svg {
+        stroke-width: 2.5;
+      }
+      
+      /* Mobile bottom navigation fixes */
+      @supports (padding-bottom: env(safe-area-inset-bottom)) {
+        .safe-area-inset-bottom {
+          padding-bottom: env(safe-area-inset-bottom);
+        }
+      }
+      
+      /* Ensure mobile navigation stays at bottom */
+      @media (max-width: 768px) {
+        html,
+        body {
+          overflow-x: hidden !important;
+          width: 100vw !important;
+          max-width: 100vw !important;
+        }
+      
+        *,
+        *::before,
+        *::after {
+          max-width: 100% !important;
+          box-sizing: border-box !important;
+        }
+      
+        .mobile-nav-fixed {
+          position: fixed !important;
+          bottom: 0 !important;
+          left: 0 !important;
+          right: 0 !important;
+          z-index: 9999 !important;
+          width: 100vw !important;
+          max-width: 100vw !important;
+        }
+      
+        /* Force all containers to respect viewport width */
+        .flex,
+        .flex-1,
+        main,
+        header,
+        nav {
+          max-width: 100vw !important;
+          overflow-x: hidden !important;
+        }
+      
+        /* Prevent any element from causing horizontal scroll */
+        .mobile-container * {
+          box-sizing: border-box !important;
+        }
+      }
+    </style>
+  </head>
+
+  <body class="bg-gray-50 text-black leading-normal tracking-normal overflow-x-hidden w-full max-w-full">
+    <!-- Main Layout with Sidebar -->
+    <div class="flex min-h-screen w-full max-w-full overflow-x-hidden">
+      <!-- Desktop Sidebar -->
+      <nav id="desktopSidebar" class="hidden md:flex fixed left-0 top-0 h-screen w-64 bg-white border-r border-gray-300 flex-col z-50">
+        <!-- Logo -->
+        <div class="p-4 border-b border-gray-100">
+          <h1 id="logoText" class="instagram-logo text-2xl text-gray-900">Instagram</h1>
+        </div>
+
+        <!-- Navigation Items -->
+        <div class="flex-1 py-4">
+          <ul class="space-y-1 px-2">
+            <!-- Home -->
+            <li>
+              <a href="{% url 'home' %}" class="nav-item flex items-center px-3 py-3 rounded-lg text-gray-700 hover:bg-gray-100" title="Home">
+                <svg class="w-7 h-7 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                <span class="nav-text ml-4 text-base">Home</span>
+              </a>
+            </li>
+
+            <!-- Search -->
+            <li>
+              <a href="{% url 'search' %}" class="nav-item flex items-center px-3 py-3 rounded-lg text-gray-700 hover:bg-gray-100" title="Search">
+                <svg class="w-7 h-7 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <span class="nav-text ml-4 text-base">Search</span>
+              </a>
+            </li>
+
+            <!-- Stories -->
+            <li>
+              <a href="{% url 'story_home' %}" class="nav-item flex items-center px-3 py-3 rounded-lg text-gray-700 hover:bg-gray-100" title="Stories">
+                <svg class="w-7 h-7 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                </svg>
+                <span class="nav-text ml-4 text-base">Stories</span>
+              </a>
+            </li>
+
+            <!-- Explore -->
+            <li>
+              <a href="{% url 'explore' %}" class="nav-item flex items-center px-3 py-3 rounded-lg text-gray-700 hover:bg-gray-100" title="Explore">
+                <svg class="w-7 h-7 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="nav-text ml-4 text-base">Explore</span>
+              </a>
+            </li>
+
+            <!-- Messages -->
+            <li>
+              <a href="{% url 'messages_home' %}" class="nav-item flex items-center px-3 py-3 rounded-lg text-gray-700 hover:bg-gray-100 relative" title="Messages">
+                <svg class="w-7 h-7 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                <span class="nav-text ml-4 text-base">Messages</span>
+                <!-- Message Badge -->
+                {% if total_unread_messages > 0 %}
+                  <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">{{ total_unread_messages }}</span>
+                {% endif %}
+              </a>
+            </li>
+
+            <!-- Notifications -->
+            <li>
+              <a href="{% url 'notifications' %}" class="nav-item flex items-center px-3 py-3 rounded-lg text-gray-700 hover:bg-gray-100 relative" title="Notifications">
+                <svg class="w-7 h-7 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                <span class="nav-text ml-4 text-base">Notifications</span>
+                {% if unread_notifications_count > 0 %}
+                  <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">{{ unread_notifications_count }}</span>
+                {% elif unseen_notifications_count > 0 %}
+                  <span class="absolute top-1 right-1 bg-red-500 rounded-full h-2 w-2"></span>
+                {% endif %}
+              </a>
+            </li>
+
+            <!-- Create -->
+            <li>
+              <a href="{% url 'create_post' %}" class="nav-item flex items-center px-3 py-3 rounded-lg text-gray-700 hover:bg-gray-100" title="Create">
+                <svg class="w-7 h-7 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                <span class="nav-text ml-4 text-base">Create</span>
+              </a>
+            </li>
+
+            <!-- Profile -->
+            <li>
+              <a href="{% url 'profile' %}" class="nav-item flex items-center px-3 py-3 rounded-lg text-gray-700 hover:bg-gray-100" title="Profile">
+                <div class="w-7 h-7 flex-shrink-0 bg-gradient-to-br from-purple-600 to-blue-500 rounded-full flex items-center justify-center">
+                  <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <span class="nav-text ml-4 text-base">Profile</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Bottom Section -->
+        <div class="border-t border-gray-100 p-2">
+          <!-- More Menu -->
+          <div class="relative">
+            <button onclick="toggleMoreMenu()" class="nav-item w-full flex items-center px-3 py-3 rounded-lg text-gray-700 hover:bg-gray-100" title="More">
+              <svg class="w-7 h-7 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+              <span class="nav-text ml-4 text-base">More</span>
+            </button>
+
+            <!-- More Menu Dropdown -->
+            <div id="moreMenu" class="hidden absolute bottom-full left-0 w-56 bg-white border border-gray-200 rounded-lg shadow-lg mb-2">
+              <a href="#" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-t-lg">Settings</a>
+              <a href="#" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100">Your activity</a>
+              <a href="#" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100">Saved</a>
+              <a href="#" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100">Switch appearance</a>
+              <a href="#" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100">Report a problem</a>
+              <hr class="border-gray-200" />
+              <a href="#" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100">Switch accounts</a>
+              <a href="{% url 'signout' %}" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-b-lg border-t border-gray-100">Log out</a>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Mobile Header -->
+      <header class="md:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-300 z-40 w-full max-w-full">
+        <div class="flex justify-between items-center px-3 py-3 w-full">
+          <h1 class="instagram-logo text-xl text-gray-900 flex-shrink-0">Instagram</h1>
+          <div class="flex items-center space-x-3 flex-shrink-0">
+            <!-- Notifications -->
+            <a href="{% url 'notifications' %}" class="relative">
+              <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+              {% if unread_notifications_count > 0 %}
+                <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold">{{ unread_notifications_count }}</span>
+              {% elif unseen_notifications_count > 0 %}
+                <span class="absolute top-0 right-0 bg-red-500 rounded-full h-2 w-2"></span>
+              {% endif %}
+            </a>
+            <!-- Messages -->
+            <a href="{% url 'messages_home' %}">
+              <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+            </a>
+          </div>
+        </div>
+      </header>
+
+      <!-- Mobile Bottom Navigation -->
+      <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-300 z-50 safe-area-inset-bottom mobile-nav-fixed w-full max-w-full">
+        <div class="flex items-center justify-around py-2 px-4 w-full">
+          <!-- Home -->
+          <a href="{% url 'home' %}" class="nav-item-mobile flex items-center justify-center p-3">
+            <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+          </a>
+
+          <!-- Search -->
+          <a href="{% url 'search' %}" class="nav-item-mobile flex items-center justify-center p-3">
+            <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </a>
+
+          <!-- Create -->
+          <a href="{% url 'create_post' %}" class="nav-item-mobile flex items-center justify-center p-3">
+            <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+          </a>
+
+          <!-- Explore -->
+          <a href="{% url 'explore' %}" class="nav-item-mobile flex items-center justify-center p-3">
+            <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+          </a>
+
+          <!-- Profile -->
+          <a href="{% url 'profile' %}" class="nav-item-mobile flex items-center justify-center p-3">
+            <div class="w-6 h-6 bg-gradient-to-br from-purple-600 to-blue-500 rounded-full flex items-center justify-center">
+              <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+              </svg>
+            </div>
+          </a>
+        </div>
+      </nav>
+
+      <!-- Main Content Area -->
+      <main class="flex-1 md:ml-64 min-h-screen pt-16 pb-20 md:pt-0 md:pb-0 w-full max-w-full overflow-x-hidden">
+        <!-- Messages -->
+        {% if messages %}
+          <div class="fixed top-20 md:top-4 right-4 z-50 space-y-2">
+            {% for message in messages %}
+              <div class="bg-white border-l-4 {% if message.tags == 'success' %}
+                  
+                  
+                  
+                  
+                  border-green-500
+
+
+
+
+                {% elif message.tags == 'error' %}
+                  
+                  
+                  
+                  
+                  border-red-500
+
+
+
+
+                {% else %}
+                  
+                  
+                  
+                  
+                  border-blue-500
+
+
+
+
+                {% endif %} p-4 rounded shadow-lg max-w-sm">
+                <div class="flex items-center">
+                  {% if message.tags == 'success' %}
+                    <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                  {% elif message.tags == 'error' %}
+                    <svg class="w-5 h-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                  {% else %}
+                    <svg class="w-5 h-5 text-blue-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                    </svg>
+                  {% endif %}
+                  <p class="text-sm text-gray-700">{{ message }}</p>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        {% block content %}
+
+        {% endblock %}
+      </main>
+    </div>
+
+    <script>
+      function toggleMoreMenu() {
+        const menu = document.getElementById('moreMenu')
+        menu.classList.toggle('hidden')
+      }
+      
+      // Close menu when clicking outside
+      document.addEventListener('click', function (event) {
+        const menu = document.getElementById('moreMenu')
+        const button = event.target.closest('button')
+      
+        // Close more menu
+        if (!button || !button.onclick || button.onclick.toString().indexOf('toggleMoreMenu') === -1) {
+          menu.classList.add('hidden')
+        }
+      })
+      
+      // Set active nav item based on current URL
+      document.addEventListener('DOMContentLoaded', function () {
+        const currentPath = window.location.pathname
+        const navItems = document.querySelectorAll('.nav-item, .nav-item-mobile')
+      
+        navItems.forEach((item) => {
+          const href = item.getAttribute('href')
+          if (href && currentPath === href) {
+            item.classList.add('active')
+          }
+        })
+      })
+      
+      // Suppress browser extension errors
+      window.addEventListener('error', function (e) {
+        if (e.message && e.message.includes('message channel closed')) {
+          e.preventDefault()
+          return false
+        }
+      })
+    </script>
+  </body>
+</html>

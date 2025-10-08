@@ -1,0 +1,375 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="bg-gray-50 min-h-screen w-full max-w-full overflow-x-hidden">
+  <div class="w-full max-w-6xl mx-auto px-4 py-8">
+    <div class="bg-white border border-gray-300 rounded-lg p-6">
+      <h1 class="text-xl font-semibold mb-6">Create New Story</h1>
+      
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        <!-- Left side - Upload and Form -->
+        <div class="space-y-6">
+          <form id="createStoryForm" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <!-- Media Upload -->
+            <div class="mb-6">
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Photo/Video
+              </label>
+              <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                <input type="file" id="storyMedia" name="media_file" accept="image/*,video/*" class="hidden">
+                <div id="uploadArea" class="cursor-pointer" onclick="document.getElementById('storyMedia').click()">
+                  <svg class="w-12 h-12 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 002 2z"/>
+                  </svg>
+                  <p class="text-gray-500">Click to select photo or video</p>
+                  <p class="text-xs text-gray-400 mt-1">Stories disappear after 24 hours</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Caption -->
+            <div class="mb-6">
+              <label for="caption" class="block text-sm font-medium text-gray-700 mb-2">
+                Caption (Optional)
+              </label>
+              <textarea 
+                id="caption" 
+                name="caption" 
+                rows="3" 
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                placeholder="Add a caption to your story..."
+                maxlength="500"
+              ></textarea>
+              <p class="text-xs text-gray-500 mt-1">
+                <span id="captionCount">0</span>/500 characters
+              </p>
+            </div>
+
+            <!-- Story Duration Info -->
+            <div class="mb-6">
+              <div class="flex items-center space-x-2 text-sm text-gray-600 bg-blue-50 p-3 rounded-md">
+                <svg class="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                </svg>
+                <span>Your story will be visible for 24 hours</span>
+              </div>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="flex justify-end space-x-3">
+              <a href="{% url 'home' %}" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">
+                Cancel
+              </a>
+              <button 
+                type="submit" 
+                id="submitBtn"
+                class="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                disabled
+              >
+                Share Story
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Right side - Preview -->
+        <div class="flex justify-center lg:justify-start">
+          <div class="w-full max-w-sm">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Preview</h3>
+            <div id="storyPreview" class="relative aspect-[9/16] bg-gray-100 rounded-2xl overflow-hidden border-2 border-gray-200">
+              <!-- Default preview state -->
+              <div id="previewPlaceholder" class="flex items-center justify-center h-full text-gray-400">
+                <div class="text-center">
+                  <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"/>
+                  </svg>
+                  <p class="text-sm">Your story preview</p>
+                  <p class="text-xs mt-1">Upload media to see preview</p>
+                </div>
+              </div>
+              
+              <!-- Media preview -->
+              <div id="mediaPreview" class="hidden relative w-full h-full">
+                <div id="mediaContent" class="w-full h-full"></div>
+                
+                <!-- Caption overlay -->
+                <div id="captionOverlay" class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 to-transparent">
+                  <div class="flex items-start space-x-3">
+                    <div class="w-8 h-8 bg-gray-300 rounded-full flex-shrink-0"></div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-white text-sm font-medium">{{ user.username }}</p>
+                      <p id="previewCaption" class="text-white text-sm mt-1 break-words"></p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Remove button -->
+              <button type="button" id="removeMedia" class="hidden absolute top-3 right-3 bg-black/50 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-black/70 transition-colors z-10">
+                ×
+              </button>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const storyMedia = document.getElementById('storyMedia');
+  const captionTextarea = document.getElementById('caption');
+  const captionCount = document.getElementById('captionCount');
+  const removeMediaBtn = document.getElementById('removeMedia');
+  const submitBtn = document.getElementById('submitBtn');
+  const form = document.getElementById('createStoryForm');
+  const uploadArea = document.getElementById('uploadArea');
+  
+  // Preview elements
+  const previewPlaceholder = document.getElementById('previewPlaceholder');
+  const mediaPreview = document.getElementById('mediaPreview');
+  const mediaContent = document.getElementById('mediaContent');
+  const previewCaption = document.getElementById('previewCaption');
+
+  // Handle file selection
+  storyMedia.addEventListener('change', function() {
+    const file = this.files[0];
+    
+    if (file) {
+      showPreview(file);
+      submitBtn.disabled = false;
+    } else {
+      hidePreview();
+      submitBtn.disabled = true;
+    }
+  });
+
+  // Handle caption input and character count
+  captionTextarea.addEventListener('input', function() {
+    const text = this.value;
+    captionCount.textContent = text.length;
+    
+    // Update preview caption in real-time
+    previewCaption.textContent = text;
+    
+    // Show/hide caption overlay based on content
+    const captionOverlay = document.getElementById('captionOverlay');
+    if (text.trim() && !mediaPreview.classList.contains('hidden')) {
+      captionOverlay.style.display = 'block';
+    } else {
+      captionOverlay.style.display = 'none';
+    }
+  });
+
+  // Handle drag and drop
+  uploadArea.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    this.classList.add('border-blue-500', 'bg-blue-50');
+  });
+
+  uploadArea.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    this.classList.remove('border-blue-500', 'bg-blue-50');
+  });
+
+  uploadArea.addEventListener('drop', function(e) {
+    e.preventDefault();
+    this.classList.remove('border-blue-500', 'bg-blue-50');
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      const file = files[0];
+      if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
+        // Create a new FileList-like object
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        storyMedia.files = dt.files;
+        
+        showPreview(file);
+        submitBtn.disabled = false;
+      }
+    }
+  });
+
+  // Remove media
+  removeMediaBtn.addEventListener('click', function() {
+    storyMedia.value = '';
+    hidePreview();
+    submitBtn.disabled = true;
+  });
+
+  // Handle form submission
+  form.addEventListener('submit', function(e) {
+    e.preventDefault(); // Prevent default form submission
+    
+    if (!storyMedia.files[0]) {
+      alert('Please select a photo or video for your story');
+      return;
+    }
+    
+    // Disable submit button to prevent double submission
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sharing...';
+    
+    // Create FormData object
+    const formData = new FormData();
+    formData.append('media_file', storyMedia.files[0]);
+    formData.append('caption', captionTextarea.value);
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+    
+    // Submit via AJAX
+    fetch(form.action || window.location.href, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Show success toast
+        showToast('Story shared successfully! 🎉', 'success');
+        
+        // Reset form after short delay
+        setTimeout(() => {
+          resetForm();
+        }, 1500);
+        
+        // Optionally redirect after longer delay
+        setTimeout(() => {
+          window.location.href = "{% url 'home' %}";
+        }, 3000);
+      } else {
+        // Show error toast
+        showToast(data.message || 'Failed to create story. Please try again.', 'error');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Share Story';
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      showToast('Something went wrong. Please try again.', 'error');
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Share Story';
+    });
+  });
+
+  function showPreview(file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      // Hide placeholder and show preview
+      previewPlaceholder.classList.add('hidden');
+      mediaPreview.classList.remove('hidden');
+      removeMediaBtn.classList.remove('hidden');
+      
+      // Set media content
+      if (file.type.startsWith('image/')) {
+        mediaContent.innerHTML = `
+          <img src="${e.target.result}" alt="Story preview" class="w-full h-full object-cover">
+        `;
+      } else if (file.type.startsWith('video/')) {
+        mediaContent.innerHTML = `
+          <video src="${e.target.result}" class="w-full h-full object-cover" muted>
+          </video>
+        `;
+      }
+      
+      // Update caption overlay
+      const captionText = captionTextarea.value.trim();
+      previewCaption.textContent = captionText;
+      
+      const captionOverlay = document.getElementById('captionOverlay');
+      if (captionText) {
+        captionOverlay.style.display = 'block';
+      } else {
+        captionOverlay.style.display = 'none';
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function hidePreview() {
+    // Show placeholder and hide preview
+    previewPlaceholder.classList.remove('hidden');
+    mediaPreview.classList.add('hidden');
+    removeMediaBtn.classList.add('hidden');
+    
+    // Clear content
+    mediaContent.innerHTML = '';
+    previewCaption.textContent = '';
+  }
+
+  function resetForm() {
+    // Clear form fields
+    storyMedia.value = '';
+    captionTextarea.value = '';
+    captionCount.textContent = '0';
+    
+    // Reset UI state
+    hidePreview();
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Share Story';
+  }
+
+  function showToast(message, type = 'info') {
+    // Remove any existing toast
+    const existingToast = document.querySelector('.toast-notification');
+    if (existingToast) {
+      existingToast.remove();
+    }
+
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = `toast-notification fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg transform transition-all duration-300 translate-x-full`;
+    
+    // Set toast styles based on type
+    if (type === 'success') {
+      toast.classList.add('bg-green-500', 'text-white');
+    } else if (type === 'error') {
+      toast.classList.add('bg-red-500', 'text-white');
+    } else {
+      toast.classList.add('bg-blue-500', 'text-white');
+    }
+
+    // Add message and close button
+    toast.innerHTML = `
+      <div class="flex items-center space-x-3">
+        <div class="flex-1">
+          ${message}
+        </div>
+        <button onclick="this.parentElement.parentElement.remove()" class="text-white hover:text-gray-200">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+    `;
+
+    // Add to page
+    document.body.appendChild(toast);
+
+    // Animate in
+    setTimeout(() => {
+      toast.classList.remove('translate-x-full');
+    }, 100);
+
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+      if (toast.parentElement) {
+        toast.classList.add('translate-x-full');
+        setTimeout(() => {
+          if (toast.parentElement) {
+            toast.remove();
+          }
+        }, 300);
+      }
+    }, 5000);
+  }
+});
+</script>
+{% endblock %}

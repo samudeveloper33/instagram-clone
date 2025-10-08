@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="bg-white min-h-screen">
+  <!-- Modern Header -->
+  <div class="bg-white border-b border-gray-200 sticky top-0 z-40">
+    <div class="max-w-4xl mx-auto px-4 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <h1 class="text-2xl font-bold text-gray-900">Stories</h1>
+          <div class="flex items-center space-x-2 text-sm text-gray-500">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            <span>Watch stories from people you follow</span>
+          </div>
+        </div>
+        
+        <!-- Create Story Button -->
+        <a href="{% url 'create_story' %}" class="flex items-center space-x-2 bg-blue-500 hover:bg-blue-600 text-white font-medium px-4 py-2 rounded-lg transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+          </svg>
+          <span>Create Story</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stories Content -->
+  <div class="max-w-4xl mx-auto px-4 py-6">
+    {% if users_with_stories %}
+      <!-- Stories Grid - Instagram Style -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for user_story in users_with_stories %}
+          <div class="cursor-pointer story-card group" onclick="openStory('{{ user_story.user.username }}')">
+            <!-- Story Container -->
+            <div class="relative bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-200 group-hover:scale-[1.02]">
+              
+              <!-- Story Media -->
+              <div class="relative aspect-[9/16] bg-gray-100">
+                {% if user_story.latest_story.media_type == 'image' %}
+                  <img src="{{ user_story.latest_story.media_file.url }}" alt="Story" class="w-full h-full object-cover">
+                {% elif user_story.latest_story.media_type == 'video' %}
+                  <video src="{{ user_story.latest_story.media_file.url }}" class="w-full h-full object-cover" muted preload="metadata"></video>
+                  <!-- Video Play Indicator -->
+                  <div class="absolute top-3 right-3 bg-black bg-opacity-60 rounded-full p-2">
+                    <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M8 5v10l8-5-8-5z"/>
+                    </svg>
+                  </div>
+                {% endif %}
+                
+                <!-- Story Count Badge -->
+                {% if user_story.stories.count > 1 %}
+                  <div class="absolute top-3 left-3 bg-black bg-opacity-70 rounded-full px-2 py-1">
+                    <div class="flex items-center space-x-1">
+                      <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+                      </svg>
+                      <span class="text-white text-xs font-medium">{{ user_story.stories.count }}</span>
+                    </div>
+                  </div>
+                {% endif %}
+                
+                <!-- Gradient Overlay -->
+                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+              </div>
+              
+              <!-- User Info Overlay -->
+              <div class="absolute bottom-0 left-0 right-0 p-4">
+                <div class="flex items-center space-x-3">
+                  <!-- Profile Picture with Story Ring -->
+                  <div class="relative flex-shrink-0">
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-600 p-0.5">
+                      <div class="w-full h-full bg-white rounded-full flex items-center justify-center">
+                        {% if user_story.user.profile.profile_picture %}
+                          <img src="{{ user_story.user.profile.profile_picture.url }}" alt="{{ user_story.user.username }}" class="w-10 h-10 rounded-full object-cover">
+                        {% else %}
+                          <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                            <span class="text-white text-sm font-semibold">{{ user_story.user.username|first|upper }}</span>
+                          </div>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- User Details -->
+                  <div class="flex-1 min-w-0">
+                    <p class="text-white font-semibold text-sm truncate">{{ user_story.user.username }}</p>
+                    <div class="flex items-center space-x-1 text-xs text-white/80">
+                      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                      </svg>
+                      <span>{{ user_story.latest_story.created_at|timesince }} ago</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Username Below Card -->
+            <div class="mt-2 text-center">
+              <p class="text-sm font-medium text-gray-900 truncate">{{ user_story.user.username }}</p>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+      
+      <!-- Modern Stats Section -->
+      <div class="mt-12 bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-8 border border-gray-100">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div class="text-center">
+            <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+              </svg>
+            </div>
+            <p class="text-3xl font-bold text-gray-900 mb-1">{{ users_with_stories|length }}</p>
+            <p class="text-sm font-medium text-gray-600">Active Users</p>
+          </div>
+          
+          <div class="text-center">
+            <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+              </svg>
+            </div>
+            <p class="text-3xl font-bold text-gray-900 mb-1">
+              {% widthratio users_with_stories|length 1 2 %}
+            </p>
+            <p class="text-sm font-medium text-gray-600">Total Stories</p>
+          </div>
+          
+          <div class="text-center">
+            <div class="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+              </svg>
+            </div>
+            <p class="text-3xl font-bold text-gray-900 mb-1">24h</p>
+            <p class="text-sm font-medium text-gray-600">Story Duration</p>
+          </div>
+          
+          <div class="text-center">
+            <div class="w-16 h-16 bg-gradient-to-br from-pink-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
+              </svg>
+            </div>
+            <p class="text-3xl font-bold text-gray-900 mb-1">Live</p>
+            <p class="text-sm font-medium text-gray-600">Now Active</p>
+          </div>
+        </div>
+      </div>
+      
+    {% else %}
+      <!-- Modern No Stories State -->
+      <div class="text-center py-20">
+        <div class="max-w-md mx-auto">
+          <!-- Modern Icon -->
+          <div class="relative mb-8">
+            <div class="w-32 h-32 mx-auto bg-gradient-to-br from-blue-100 to-purple-100 rounded-3xl flex items-center justify-center shadow-lg">
+              <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center">
+                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                </svg>
+              </div>
+            </div>
+            <!-- Floating Elements -->
+            <div class="absolute top-6 right-12 w-4 h-4 bg-blue-400 rounded-full animate-pulse"></div>
+            <div class="absolute bottom-6 left-12 w-3 h-3 bg-purple-400 rounded-full animate-bounce"></div>
+          </div>
+          
+          <h2 class="text-4xl font-bold text-gray-900 mb-4">No Stories Yet</h2>
+          <p class="text-gray-600 mb-8 text-lg leading-relaxed">
+            When people you follow share stories, you'll see them here.<br>
+            Be the first to share your moment!
+          </p>
+          
+          <!-- Modern CTA Buttons -->
+          <div class="space-y-4">
+            <a href="{% url 'create_story' %}" class="inline-flex items-center space-x-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold px-8 py-4 rounded-2xl shadow-lg transition-all duration-200 transform hover:scale-105">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+              </svg>
+              <span>Share Your First Story</span>
+            </a>
+            
+            <div class="mt-6">
+              <a href="{% url 'suggested_users' %}" class="text-blue-600 hover:text-blue-700 font-medium transition-colors">
+                Find people to follow →
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Enhanced JavaScript -->
+<script>
+  function openStory(username) {
+    window.location.href = `/stories/${username}/`;
+  }
+  
+  // Add hover effects
+  document.addEventListener('DOMContentLoaded', function() {
+    const storyCards = document.querySelectorAll('.story-card');
+    
+    storyCards.forEach(card => {
+      card.addEventListener('mouseenter', function() {
+        this.style.transform = 'scale(1.02)';
+        this.style.transition = 'transform 0.2s ease-out';
+      });
+      
+      card.addEventListener('mouseleave', function() {
+        this.style.transform = 'scale(1)';
+      });
+    });
+  });
+</script>
+
+<style>
+  /* Custom animations */
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+  
+  .story-card {
+    transition: all 0.2s ease-out;
+  }
+  
+  .story-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Gradient animations */
+  .bg-gradient-to-tr {
+    background-size: 200% 200%;
+    animation: gradient 3s ease infinite;
+  }
+  
+  @keyframes gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+</style>
+{% endblock %}

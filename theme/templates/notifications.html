@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+{% block content %}
+<!-- Notifications Page -->
+<div class="max-w-2xl mx-auto bg-white min-h-screen">
+  <!-- Header -->
+  <div class="sticky top-0 bg-white border-b border-gray-300 px-6 py-4 z-10">
+    <h1 class="text-2xl font-bold text-gray-900">Notifications</h1>
+  </div>
+
+  <!-- Notifications List -->
+  <div class="divide-y divide-gray-100">
+    {% if notifications %}
+      <!-- New Notifications Section -->
+      {% with new_notifications=notifications|dictsort:"created_at"|slice:":10" %}
+        {% if new_notifications %}
+          <div class="px-6 py-3">
+            <h2 class="text-base font-semibold text-gray-900">New</h2>
+          </div>
+          
+          {% for notification in new_notifications %}
+            <a href="{{ notification.get_notification_url }}" 
+               class="notification-item flex items-center px-6 py-3 hover:bg-gray-50 transition-colors {% if not notification.is_read %}bg-blue-50{% endif %}"
+               data-notification-id="{{ notification.id }}">
+              <!-- Profile Picture -->
+              <div class="flex-shrink-0 mr-3">
+                {% if notification.sender %}
+                  {% if notification.sender.profile.profile_picture %}
+                    <img src="{{ notification.sender.profile.profile_picture.url }}" 
+                         alt="{{ notification.sender.username }}" 
+                         class="w-11 h-11 rounded-full object-cover">
+                  {% else %}
+                    <div class="w-11 h-11 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                      <span class="text-white text-base font-semibold">{{ notification.sender.username|first|upper }}</span>
+                    </div>
+                  {% endif %}
+                {% else %}
+                  <!-- System Notification Icon -->
+                  <div class="w-11 h-11 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                  </div>
+                {% endif %}
+              </div>
+
+              <!-- Notification Content -->
+              <div class="flex-1 min-w-0">
+                <p class="text-sm text-gray-900">
+                  {% if notification.sender %}
+                    <span class="font-semibold">{{ notification.sender.username }}</span>
+                  {% endif %}
+                  {{ notification.message|truncatewords:20 }}
+                </p>
+                <p class="text-xs text-gray-500 mt-0.5">{{ notification.created_at|timesince }} ago</p>
+              </div>
+
+              <!-- Notification Type Icon or Image -->
+              <div class="flex-shrink-0 ml-3">
+                {% if notification.notification_type == 'like' and notification.post_id %}
+                  <!-- Show post thumbnail for likes -->
+                  <div class="w-10 h-10 bg-gray-200 rounded flex items-center justify-center">
+                    <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
+                    </svg>
+                  </div>
+                {% elif notification.notification_type == 'comment' and notification.post_id %}
+                  <!-- Show post thumbnail for comments -->
+                  <div class="w-10 h-10 bg-gray-200 rounded flex items-center justify-center">
+                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                    </svg>
+                  </div>
+                {% elif notification.notification_type == 'follow_request' %}
+                  <!-- Follow/Ignore buttons for follow requests -->
+                  <div class="flex space-x-2">
+                    <button class="px-4 py-1.5 bg-blue-500 text-white text-xs font-semibold rounded-lg hover:bg-blue-600">
+                      Confirm
+                    </button>
+                    <button class="px-4 py-1.5 bg-gray-200 text-gray-900 text-xs font-semibold rounded-lg hover:bg-gray-300">
+                      Delete
+                    </button>
+                  </div>
+                {% endif %}
+              </div>
+
+              <!-- Unread Indicator -->
+              {% if not notification.is_read %}
+                <div class="flex-shrink-0 ml-2">
+                  <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                </div>
+              {% endif %}
+            </a>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <!-- Earlier Notifications Section -->
+      {% with old_notifications=notifications|dictsort:"created_at"|slice:"10:" %}
+        {% if old_notifications %}
+          <div class="px-6 py-3 mt-4">
+            <h2 class="text-base font-semibold text-gray-900">Earlier</h2>
+          </div>
+          
+          {% for notification in old_notifications %}
+            <a href="{{ notification.get_notification_url }}" 
+               class="notification-item flex items-center px-6 py-3 hover:bg-gray-50 transition-colors"
+               data-notification-id="{{ notification.id }}">
+              <!-- Profile Picture -->
+              <div class="flex-shrink-0 mr-3">
+                {% if notification.sender %}
+                  {% if notification.sender.profile.profile_picture %}
+                    <img src="{{ notification.sender.profile.profile_picture.url }}" 
+                         alt="{{ notification.sender.username }}" 
+                         class="w-11 h-11 rounded-full object-cover">
+                  {% else %}
+                    <div class="w-11 h-11 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                      <span class="text-white text-base font-semibold">{{ notification.sender.username|first|upper }}</span>
+                    </div>
+                  {% endif %}
+                {% else %}
+                  <div class="w-11 h-11 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                  </div>
+                {% endif %}
+              </div>
+
+              <!-- Notification Content -->
+              <div class="flex-1 min-w-0">
+                <p class="text-sm text-gray-900">
+                  {% if notification.sender %}
+                    <span class="font-semibold">{{ notification.sender.username }}</span>
+                  {% endif %}
+                  {{ notification.message|truncatewords:20 }}
+                </p>
+                <p class="text-xs text-gray-500 mt-0.5">{{ notification.created_at|timesince }} ago</p>
+              </div>
+
+              <!-- Notification Type Icon -->
+              <div class="flex-shrink-0 ml-3">
+                {% if notification.notification_type == 'like' %}
+                  <div class="w-10 h-10 bg-gray-100 rounded flex items-center justify-center">
+                    <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
+                    </svg>
+                  </div>
+                {% elif notification.notification_type == 'comment' %}
+                  <div class="w-10 h-10 bg-gray-100 rounded flex items-center justify-center">
+                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                    </svg>
+                  </div>
+                {% endif %}
+              </div>
+            </a>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+    {% else %}
+      <!-- Empty State -->
+      <div class="flex flex-col items-center justify-center py-16 px-6">
+        <div class="w-24 h-24 border-2 border-gray-900 rounded-full flex items-center justify-center mb-6">
+          <svg class="w-12 h-12 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+          </svg>
+        </div>
+        <h2 class="text-xl font-light text-gray-900 mb-2">No notifications yet</h2>
+        <p class="text-gray-500 text-center">When someone likes or comments on your posts, you'll see them here.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  // Add click event listeners to all notification items
+  document.addEventListener('DOMContentLoaded', function() {
+    const notificationItems = document.querySelectorAll('.notification-item');
+    
+    notificationItems.forEach(function(item) {
+      item.addEventListener('click', function(e) {
+        const notificationId = this.getAttribute('data-notification-id');
+        
+        // Mark as read
+        fetch('/api/notifications/' + notificationId + '/mark-read/', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+          }
+        });
+      });
+    });
+
+    // Mark all as seen when page loads
+    fetch('/api/notifications/mark-all-seen/', {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'Content-Type': 'application/json'
+      }
+    });
+  });
+</script>
+{% endblock %}

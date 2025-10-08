@@ -1,0 +1,524 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="bg-white min-h-screen w-full">
+  <div class="w-full max-w-4xl mx-auto px-4 md:px-8 lg:px-16 pt-8 pb-8">
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex items-center space-x-6 mb-6">
+        {% if user.profile.profile_picture %}
+          <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}" class="w-16 h-16 rounded-full object-cover">
+        {% else %}
+          <div class="w-16 h-16 bg-gradient-to-br from-pink-400 via-red-500 to-yellow-500 rounded-full flex items-center justify-center">
+            <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+            </svg>
+          </div>
+        {% endif %}
+        <div>
+          <h1 class="text-2xl md:text-3xl font-light">{{ user.username }}</h1>
+          {% if user.first_name %}
+            <p class="text-gray-600">{{ user.first_name }} {{ user.last_name }}</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="border-b border-gray-300 mb-8">
+      <div class="flex justify-center">
+        <a href="{% url 'followers' user.username %}" class="flex items-center space-x-2 px-8 py-4 {% if view_type == 'followers' %}border-b border-black -mb-px text-black font-semibold{% else %}text-gray-400 hover:text-gray-600{% endif %} text-sm uppercase tracking-widest transition-colors">
+          <span>{{ user.profile.followers_count }} Followers</span>
+        </a>
+        <a href="{% url 'following' user.username %}" class="flex items-center space-x-2 px-8 py-4 {% if view_type == 'following' %}border-b border-black -mb-px text-black font-semibold{% else %}text-gray-400 hover:text-gray-600{% endif %} text-sm uppercase tracking-widest transition-colors">
+          <span>{{ user.profile.following_count }} Following</span>
+        </a>
+        {% if is_own_profile and total_pending > 0 %}
+          <a href="{% url 'follow_requests' %}" class="flex items-center space-x-2 px-8 py-4 text-gray-400 hover:text-gray-600 text-sm uppercase tracking-widest transition-colors relative">
+            <span>Follow Requests</span>
+            <span class="bg-red-500 text-white text-xs font-medium px-2 py-1 rounded-full">{{ total_pending }}</span>
+          </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Follow Requests Section (only for own profile) -->
+    {% if is_own_profile and pending_requests and view_type == 'followers' %}
+      <div class="mb-8">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold">Follow Requests</h3>
+          {% if total_pending > 5 %}
+            <a href="{% url 'follow_requests' %}" class="text-blue-500 hover:text-blue-600 text-sm font-medium">See All ({{ total_pending }})</a>
+          {% endif %}
+        </div>
+        <div class="space-y-4 bg-gray-50 rounded-lg p-4">
+          {% for follow_request in pending_requests %}
+            <div class="flex items-center justify-between bg-white rounded-lg p-4 shadow-sm follow-request-item" data-request-id="{{ follow_request.id }}">
+              <div class="flex items-center space-x-3">
+                {% if follow_request.from_user.profile.profile_picture %}
+                  <img src="{{ follow_request.from_user.profile.profile_picture.url }}" alt="{{ follow_request.from_user.username }}" class="w-12 h-12 rounded-full object-cover">
+                {% else %}
+                  <div class="w-12 h-12 bg-gradient-to-br from-pink-400 via-red-500 to-yellow-500 rounded-full flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                    </svg>
+                  </div>
+                {% endif %}
+                <div>
+                  <a href="{% url 'profile' follow_request.from_user.username %}" class="font-semibold text-sm hover:underline">{{ follow_request.from_user.username }}</a>
+                  {% if follow_request.from_user.first_name %}
+                    <p class="text-gray-600 text-xs">{{ follow_request.from_user.first_name }} {{ follow_request.from_user.last_name }}</p>
+                  {% endif %}
+                  <p class="text-gray-400 text-xs">{{ follow_request.created_at|timesince }} ago</p>
+                </div>
+              </div>
+              <div class="flex space-x-2">
+                <button onclick="acceptRequest({{ follow_request.id }})" class="bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium px-4 py-2 rounded-md transition-colors accept-btn">
+                  Confirm
+                </button>
+                <button onclick="declineRequest({{ follow_request.id }})" class="bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-medium px-4 py-2 rounded-md transition-colors decline-btn">
+                  Delete
+                </button>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Follow List -->
+    {% if view_type == 'followers' and followers %}
+      <div class="space-y-6">
+        {% for follow in followers %}
+          <div class="flex items-center justify-between pb-4 border-b border-gray-100 last:border-b-0">
+            <div class="flex items-center space-x-4">
+              {% if follow.follower.profile.profile_picture %}
+                <img src="{{ follow.follower.profile.profile_picture.url }}" alt="{{ follow.follower.username }}" class="w-14 h-14 rounded-full object-cover">
+              {% else %}
+                <div class="w-14 h-14 bg-gradient-to-br from-pink-400 via-red-500 to-yellow-500 rounded-full flex items-center justify-center">
+                  <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                  </svg>
+                </div>
+              {% endif %}
+              <div class="flex-1">
+                <div class="flex items-center space-x-2">
+                  <a href="{% url 'profile' follow.follower.username %}" class="font-semibold text-base hover:underline">{{ follow.follower.username }}</a>
+                  {% if follow.follower.profile.is_private %}
+                    <svg class="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
+                    </svg>
+                  {% endif %}
+                </div>
+                {% if follow.follower.first_name %}
+                  <p class="text-gray-600 text-sm">{{ follow.follower.first_name }} {{ follow.follower.last_name }}</p>
+                {% endif %}
+                {% if follow.follower.profile.bio %}
+                  <p class="text-gray-600 text-sm mt-1">{{ follow.follower.profile.bio|truncatewords:10 }}</p>
+                {% endif %}
+                <p class="text-gray-400 text-xs mt-1">Following since {{ follow.created_at|date:"M d, Y" }}</p>
+              </div>
+            </div>
+            
+            {% if request.user != follow.follower %}
+              <div class="follow-btn-container flex-shrink-0" data-username="{{ follow.follower.username }}">
+                <button class="follow-btn bg-blue-500 hover:bg-blue-600 text-white font-semibold text-sm px-6 py-2 rounded-md transition-colors" 
+                        onclick="toggleFollow('{{ follow.follower.username }}', this)">
+                  Follow
+                </button>
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% elif view_type == 'following' and following %}
+      <div class="space-y-6">
+        {% for follow in following %}
+          <div class="flex items-center justify-between pb-4 border-b border-gray-100 last:border-b-0">
+            <div class="flex items-center space-x-4">
+              {% if follow.following.profile.profile_picture %}
+                <img src="{{ follow.following.profile.profile_picture.url }}" alt="{{ follow.following.username }}" class="w-14 h-14 rounded-full object-cover">
+              {% else %}
+                <div class="w-14 h-14 bg-gradient-to-br from-pink-400 via-red-500 to-yellow-500 rounded-full flex items-center justify-center">
+                  <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                  </svg>
+                </div>
+              {% endif %}
+              <div class="flex-1">
+                <div class="flex items-center space-x-2">
+                  <a href="{% url 'profile' follow.following.username %}" class="font-semibold text-base hover:underline">{{ follow.following.username }}</a>
+                  {% if follow.following.profile.is_private %}
+                    <svg class="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
+                    </svg>
+                  {% endif %}
+                </div>
+                {% if follow.following.first_name %}
+                  <p class="text-gray-600 text-sm">{{ follow.following.first_name }} {{ follow.following.last_name }}</p>
+                {% endif %}
+                {% if follow.following.profile.bio %}
+                  <p class="text-gray-600 text-sm mt-1">{{ follow.following.profile.bio|truncatewords:10 }}</p>
+                {% endif %}
+                <p class="text-gray-400 text-xs mt-1">Following since {{ follow.created_at|date:"M d, Y" }}</p>
+              </div>
+            </div>
+            
+            {% if request.user != follow.following %}
+              <div class="follow-btn-container flex-shrink-0" data-username="{{ follow.following.username }}">
+                <button class="follow-btn bg-gray-200 hover:bg-gray-300 text-black font-semibold text-sm px-6 py-2 rounded-md transition-colors" 
+                        onclick="toggleFollow('{{ follow.following.username }}', this)">
+                  Following
+                </button>
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <!-- Empty State -->
+      <div class="text-center py-16">
+        <div class="border-2 border-gray-300 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+          <svg class="w-10 h-10 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+          </svg>
+        </div>
+        <h2 class="text-3xl font-light text-gray-700 mb-4">
+          {% if view_type == 'followers' %}
+            No followers yet
+          {% else %}
+            Not following anyone yet
+          {% endif %}
+        </h2>
+        <p class="text-gray-500">
+          {% if view_type == 'followers' %}
+            When people follow {{ user.username }}, you'll see them here.
+          {% else %}
+            When {{ user.username }} follows people, you'll see them here.
+          {% endif %}
+        </p>
+      </div>
+    {% endif %}
+
+    <!-- Pagination -->
+    {% if view_type == 'followers' and followers.has_other_pages or view_type == 'following' and following.has_other_pages %}
+      <div class="flex justify-center mt-12">
+        <nav class="flex space-x-4">
+          {% if view_type == 'followers' %}
+            {% if followers.has_previous %}
+              <a href="?page={{ followers.previous_page_number }}" class="bg-gray-100 hover:bg-gray-200 text-black font-semibold px-4 py-2 rounded-md text-sm transition-colors">Previous</a>
+            {% endif %}
+            <span class="bg-blue-500 text-white font-semibold px-4 py-2 rounded-md text-sm">
+              Page {{ followers.number }} of {{ followers.paginator.num_pages }}
+            </span>
+            {% if followers.has_next %}
+              <a href="?page={{ followers.next_page_number }}" class="bg-gray-100 hover:bg-gray-200 text-black font-semibold px-4 py-2 rounded-md text-sm transition-colors">Next</a>
+            {% endif %}
+          {% else %}
+            {% if following.has_previous %}
+              <a href="?page={{ following.previous_page_number }}" class="bg-gray-100 hover:bg-gray-200 text-black font-semibold px-4 py-2 rounded-md text-sm transition-colors">Previous</a>
+            {% endif %}
+            <span class="bg-blue-500 text-white font-semibold px-4 py-2 rounded-md text-sm">
+              Page {{ following.number }} of {{ following.paginator.num_pages }}
+            </span>
+            {% if following.has_next %}
+              <a href="?page={{ following.next_page_number }}" class="bg-gray-100 hover:bg-gray-200 text-black font-semibold px-4 py-2 rounded-md text-sm transition-colors">Next</a>
+            {% endif %}
+          {% endif %}
+        </nav>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+// Handle follow request acceptance
+function acceptRequest(requestId) {
+  const item = document.querySelector(`[data-request-id="${requestId}"]`);
+  const acceptBtn = item.querySelector('.accept-btn');
+  const declineBtn = item.querySelector('.decline-btn');
+  
+  acceptBtn.textContent = 'Accepting...';
+  acceptBtn.disabled = true;
+  
+  fetch(`/follow/accept-request/${requestId}/`, {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': getCookie('csrftoken'),
+      'Content-Type': 'application/json',
+    },
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      // Update UI to show accepted state
+      acceptBtn.textContent = 'Accepted';
+      acceptBtn.className = 'bg-green-500 text-white text-xs font-medium px-4 py-2 rounded-md';
+      declineBtn.style.display = 'none';
+      
+      // Fade out and remove after delay
+      setTimeout(() => {
+        item.style.opacity = '0.5';
+        item.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+          item.remove();
+          updateRequestCount(-1);
+        }, 300);
+      }, 1000);
+      
+      // Update followers count in navigation
+      updateFollowersCount(1);
+    } else {
+      acceptBtn.textContent = 'Confirm';
+      acceptBtn.disabled = false;
+      showToast('Error accepting request', 'error');
+    }
+  })
+  .catch(error => {
+    acceptBtn.textContent = 'Confirm';
+    acceptBtn.disabled = false;
+    showToast('Error accepting request', 'error');
+  });
+}
+
+// Handle follow request decline
+function declineRequest(requestId) {
+  const item = document.querySelector(`[data-request-id="${requestId}"]`);
+  const acceptBtn = item.querySelector('.accept-btn');
+  const declineBtn = item.querySelector('.decline-btn');
+  
+  declineBtn.textContent = 'Declining...';
+  declineBtn.disabled = true;
+  
+  fetch(`/follow/decline-request/${requestId}/`, {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': getCookie('csrftoken'),
+      'Content-Type': 'application/json',
+    },
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      // Update UI to show declined state
+      declineBtn.textContent = 'Declined';
+      declineBtn.className = 'bg-red-500 text-white text-xs font-medium px-4 py-2 rounded-md';
+      acceptBtn.style.display = 'none';
+      
+      // Fade out and remove after delay
+      setTimeout(() => {
+        item.style.opacity = '0.5';
+        item.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+          item.remove();
+          updateRequestCount(-1);
+        }, 300);
+      }, 1000);
+    } else {
+      declineBtn.textContent = 'Delete';
+      declineBtn.disabled = false;
+      showToast('Error declining request', 'error');
+    }
+  })
+  .catch(error => {
+    declineBtn.textContent = 'Delete';
+    declineBtn.disabled = false;
+    showToast('Error declining request', 'error');
+  });
+}
+
+// Handle follow/unfollow toggle
+function toggleFollow(username, button) {
+  const originalText = button.textContent.trim();
+  const isFollowing = originalText === 'Following';
+  
+  // Update button state immediately for better UX
+  button.disabled = true;
+  button.textContent = isFollowing ? 'Unfollowing...' : 'Following...';
+  
+  const url = isFollowing ? `/follow/unfollow/${username}/` : `/follow/send/${username}/`;
+  
+  fetch(url, {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': getCookie('csrftoken'),
+      'Content-Type': 'application/json',
+    },
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success || data.message) {
+      if (isFollowing) {
+        // Changed from Following to Follow
+        button.textContent = 'Follow';
+        button.className = 'follow-btn bg-blue-500 hover:bg-blue-600 text-white font-semibold text-sm px-6 py-2 rounded-md transition-colors';
+        updateFollowersCount(-1);
+        showToast('Unfollowed successfully', 'success');
+      } else {
+        // Check if it's a private account (request sent) or public (immediate follow)
+        if (data.message && data.message.includes('request')) {
+          button.textContent = 'Requested';
+          button.className = 'follow-btn bg-gray-400 text-white font-semibold text-sm px-6 py-2 rounded-md cursor-not-allowed';
+          showToast('Follow request sent', 'success');
+        } else {
+          button.textContent = 'Following';
+          button.className = 'follow-btn bg-gray-200 hover:bg-gray-300 text-black font-semibold text-sm px-6 py-2 rounded-md transition-colors';
+          updateFollowersCount(1);
+          showToast('Following successfully', 'success');
+        }
+      }
+    } else {
+      // Revert button state on error
+      button.textContent = originalText;
+      showToast(data.error || 'An error occurred', 'error');
+    }
+    button.disabled = false;
+  })
+  .catch(error => {
+    // Revert button state on error
+    button.textContent = originalText;
+    button.disabled = false;
+    showToast('Network error occurred', 'error');
+  });
+}
+
+// Update request count in navigation
+function updateRequestCount(change) {
+  const badge = document.querySelector('.bg-red-500');
+  if (badge) {
+    const currentCount = parseInt(badge.textContent);
+    const newCount = currentCount + change;
+    if (newCount <= 0) {
+      // Remove the entire follow requests tab
+      badge.parentElement.remove();
+      // Hide the follow requests section
+      const requestsSection = document.querySelector('.mb-8 .bg-gray-50');
+      if (requestsSection) {
+        requestsSection.parentElement.remove();
+      }
+    } else {
+      badge.textContent = newCount;
+    }
+  }
+}
+
+// Update followers count in navigation
+function updateFollowersCount(change) {
+  const followersTab = document.querySelector('[href*="followers"]');
+  if (followersTab) {
+    const span = followersTab.querySelector('span');
+    const text = span.textContent;
+    const currentCount = parseInt(text.match(/\d+/)[0]);
+    const newCount = currentCount + change;
+    span.textContent = `${newCount} Followers`;
+  }
+}
+
+// Toast notification system
+function showToast(message, type = 'info') {
+  // Remove any existing toast
+  const existingToast = document.querySelector('.toast-notification');
+  if (existingToast) {
+    existingToast.remove();
+  }
+
+  // Create toast element
+  const toast = document.createElement('div');
+  toast.className = `toast-notification fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg transform transition-all duration-300 translate-x-full`;
+  
+  // Set toast styles based on type
+  if (type === 'success') {
+    toast.classList.add('bg-green-500', 'text-white');
+  } else if (type === 'error') {
+    toast.classList.add('bg-red-500', 'text-white');
+  } else {
+    toast.classList.add('bg-blue-500', 'text-white');
+  }
+
+  toast.innerHTML = `
+    <div class="flex items-center space-x-3">
+      <div class="flex-1 text-sm font-medium">
+        ${message}
+      </div>
+      <button onclick="this.parentElement.parentElement.remove()" class="text-white hover:text-gray-200">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+  `;
+
+  // Add to page
+  document.body.appendChild(toast);
+
+  // Animate in
+  setTimeout(() => {
+    toast.classList.remove('translate-x-full');
+  }, 100);
+
+  // Auto remove after 3 seconds
+  setTimeout(() => {
+    if (toast.parentElement) {
+      toast.classList.add('translate-x-full');
+      setTimeout(() => {
+        if (toast.parentElement) {
+          toast.remove();
+        }
+      }, 300);
+    }
+  }, 3000);
+}
+
+// Get CSRF token
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+// Initialize follow button states on page load
+document.addEventListener('DOMContentLoaded', function() {
+  // Check follow status for each user and update buttons accordingly
+  const followBtns = document.querySelectorAll('.follow-btn');
+  followBtns.forEach(btn => {
+    const username = btn.closest('.follow-btn-container').dataset.username;
+    if (username) {
+      fetch(`/follow/status/${username}/`)
+        .then(response => response.json())
+        .then(data => {
+          updateButtonState(btn, data.status);
+        })
+        .catch(error => {
+          console.log('Error checking follow status:', error);
+        });
+    }
+  });
+});
+
+// Update button state based on follow status
+function updateButtonState(button, status) {
+  switch(status) {
+    case 'following':
+      button.textContent = 'Following';
+      button.className = 'follow-btn bg-gray-200 hover:bg-gray-300 text-black font-semibold text-sm px-6 py-2 rounded-md transition-colors';
+      break;
+    case 'requested':
+      button.textContent = 'Requested';
+      button.className = 'follow-btn bg-gray-400 text-white font-semibold text-sm px-6 py-2 rounded-md cursor-not-allowed';
+      break;
+    case 'not_following':
+      button.textContent = 'Follow';
+      button.className = 'follow-btn bg-blue-500 hover:bg-blue-600 text-white font-semibold text-sm px-6 py-2 rounded-md transition-colors';
+      break;
+  }
+}
+</script>
+{% endblock %}

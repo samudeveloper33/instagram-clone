@@ -1,0 +1,393 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center">
+    <!-- Story Container -->
+    <div class="relative w-full max-w-md h-full flex flex-col">
+      <div class="absolute top-0 left-0 right-0 z-10 p-4">
+        <!-- Progress Bars -->
+        <div class="flex space-x-1 mb-4">
+          {% for story in stories %}
+            <div class="flex-1 h-0.5 bg-white bg-opacity-30 rounded-full overflow-hidden">
+              {% if story.id == current_story.id %}
+                <div class="h-full bg-white rounded-full transition-all duration-300 story-progress"
+                  data-story-id="{{ story.id }}"
+                  data-progress="0"></div>
+              {% elif forloop.counter0 < current_index %}
+                <div class="h-full bg-white rounded-full transition-all duration-300 story-progress"
+                  data-story-id="{{ story.id }}"
+                  data-progress="100"></div>
+              {% else %}
+                <div class="h-full bg-white rounded-full transition-all duration-300 story-progress"
+                  data-story-id="{{ story.id }}"
+                  data-progress="0"></div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+
+        <!-- User Info -->
+        <div class="flex items-center justify-between text-white">
+          <div class="flex items-center space-x-3">
+            {% if user.profile.profile_picture %}
+              <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}" class="w-8 h-8 rounded-full border-2 border-white" />
+            {% else %}
+              <div class="w-8 h-8 bg-gradient-to-br from-pink-400 via-red-500 to-yellow-500 rounded-full border-2 border-white flex items-center justify-center">
+                <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                </svg>
+              </div>
+            {% endif %}
+            <div>
+              <p class="font-semibold text-sm">{{ user.username }}</p>
+              <p class="text-xs opacity-75">{{ current_story.created_at|timesince }} ago</p>
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-4">
+            {% if user == request.user %}
+              <button data-action="viewers" data-story-id="{{ current_story.id }}" class="text-white opacity-75 hover:opacity-100">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              </button>
+              <button data-action="delete" data-story-id="{{ current_story.id }}" class="text-white opacity-75 hover:opacity-100">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H8a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            {% endif %}
+            <button data-action="close" class="text-white opacity-75 hover:opacity-100">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Story Content -->
+      <div class="flex-1 flex items-center justify-center relative" data-bg-color="{{ current_story.background_color }}" id="story-content">
+        {% if current_story.media_type == 'image' %}
+          <img src="{{ current_story.media_file.url }}" alt="Story" class="max-w-full max-h-full object-contain" id="story-media" />
+        {% elif current_story.media_type == 'video' %}
+          <video src="{{ current_story.media_file.url }}" class="max-w-full max-h-full object-contain" id="story-media" autoplay muted onended="nextStory()"></video>
+        {% endif %}
+
+        <!-- Caption -->
+        {% if current_story.caption %}
+          <div class="absolute bottom-20 left-4 right-4">
+            <p class="text-center text-white text-sm leading-relaxed" data-text-color="{{ current_story.text_color }}" id="story-caption">{{ current_story.caption }}</p>
+          </div>
+        {% endif %}
+
+        <!-- Navigation Areas -->
+        <div class="absolute inset-0 flex">
+          <!-- Previous Story Area -->
+          <div class="w-1/2 h-full cursor-pointer" data-action="previous"></div>
+          <!-- Next Story Area -->
+          <div class="w-1/2 h-full cursor-pointer" data-action="next"></div>
+        </div>
+      </div>
+
+      <!-- Bottom Actions -->
+      {% if user != request.user %}
+        <div class="absolute bottom-0 left-0 right-0 p-4">
+          <div class="flex items-center space-x-3">
+            <input type="text" placeholder="Send message..." class="flex-1 bg-transparent border border-white border-opacity-30 rounded-full px-4 py-2 text-white placeholder-white placeholder-opacity-75 focus:outline-none focus:border-opacity-100" />
+            <button class="text-white opacity-75 hover:opacity-100">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+            </button>
+            <button class="text-white opacity-75 hover:opacity-100">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Story Viewers Modal -->
+  <div id="viewersModal" class="fixed inset-0 bg-black bg-opacity-50 z-60 hidden items-center justify-center">
+    <div class="bg-white rounded-lg w-full max-w-md mx-4 max-h-96 overflow-hidden">
+      <div class="p-4 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <h3 class="font-semibold">Story viewers</h3>
+          <button data-action="close-viewers" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div id="viewersList" class="overflow-y-auto max-h-80">
+        <!-- Viewers will be loaded here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Story data from Django (JSON format to avoid IDE errors) -->
+  <script type="application/json" id="story-data">
+    {
+      "currentIndex": {{ current_index }},
+      "totalStories": {{ total_stories }},
+      "currentStoryId": {{ current_story.id }},
+      "username": "{{ user.username }}",
+      "mediaType": "{{ current_story.media_type }}"
+    }
+  </script>
+  
+  <script type="application/json" id="stories-data">
+    {{ stories_json|safe }}
+  </script>
+
+  <script>
+// Parse story data from JSON scripts
+const STORY_DATA = JSON.parse(document.getElementById('story-data').textContent);
+const stories = JSON.parse(document.getElementById('stories-data').textContent);
+
+let currentStoryIndex = STORY_DATA.currentIndex;
+let totalStories = STORY_DATA.totalStories;
+let progressInterval;
+let autoAdvanceTimeout;
+
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('Story viewer loaded');
+  console.log('Current story index:', currentStoryIndex);
+  console.log('Total stories:', totalStories);
+  console.log('Stories data:', stories);
+  
+  // Apply dynamic styles
+  const storyContent = document.getElementById('story-content');
+  if (storyContent) {
+    const bgColor = storyContent.getAttribute('data-bg-color');
+    if (bgColor) storyContent.style.backgroundColor = bgColor;
+  }
+  
+  const storyCaption = document.getElementById('story-caption');
+  if (storyCaption) {
+    const textColor = storyCaption.getAttribute('data-text-color');
+    if (textColor) storyCaption.style.color = textColor;
+  }
+  
+  // Apply progress bar widths from data attributes
+  document.querySelectorAll('.story-progress').forEach(bar => {
+    const progress = bar.getAttribute('data-progress');
+    if (progress) bar.style.width = progress + '%';
+  });
+  
+  // Setup event listeners with data attributes
+  document.querySelectorAll('[data-action]').forEach(button => {
+    button.addEventListener('click', function() {
+      const action = this.getAttribute('data-action');
+      const storyId = this.getAttribute('data-story-id');
+      
+      switch(action) {
+        case 'viewers':
+          viewStoryViewers(parseInt(storyId));
+          break;
+        case 'delete':
+          deleteStory(parseInt(storyId));
+          break;
+        case 'close':
+          closeStory();
+          break;
+        case 'previous':
+          previousStory();
+          break;
+        case 'next':
+          nextStory();
+          break;
+        case 'close-viewers':
+          closeViewersModal();
+          break;
+      }
+    });
+  });
+  
+  startStoryProgress();
+  
+  // Keyboard navigation
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      previousStory();
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      nextStory();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      closeStory();
+    }
+  });
+});
+
+function startStoryProgress() {
+  const progressBar = document.querySelector('[data-story-id="' + STORY_DATA.currentStoryId + '"]');
+  console.log('Looking for progress bar for story ID:', STORY_DATA.currentStoryId);
+  console.log('Progress bar found:', progressBar);
+  
+  if (!progressBar) {
+    console.error('Progress bar not found');
+    return;
+  }
+  
+  clearInterval(progressInterval);
+  clearTimeout(autoAdvanceTimeout);
+  
+  let progress = 0;
+  const duration = STORY_DATA.mediaType === 'video' ? 15000 : 5000; // 15s for video, 5s for image
+  const increment = 100 / (duration / 100);
+  
+  console.log('Starting progress with duration:', duration);
+  
+  progressInterval = setInterval(() => {
+    progress += increment;
+    progressBar.style.width = Math.min(progress, 100) + '%';
+    
+    if (progress >= 100) {
+      clearInterval(progressInterval);
+      autoAdvanceTimeout = setTimeout(nextStory, 100);
+    }
+  }, 100);
+}
+
+function nextStory() {
+  console.log('Next story called');
+  clearInterval(progressInterval);
+  clearTimeout(autoAdvanceTimeout);
+  
+  if (currentStoryIndex < totalStories - 1) {
+    // Go to next story of same user
+    const nextStoryId = stories[currentStoryIndex + 1].id;
+    console.log('Going to next story:', nextStoryId);
+    window.location.href = '/stories/' + STORY_DATA.username + '/' + nextStoryId + '/';
+  } else {
+    // Go to next user's stories or close
+    console.log('No more stories, closing');
+    closeStory();
+  }
+}
+
+function previousStory() {
+  console.log('Previous story called');
+  clearInterval(progressInterval);
+  clearTimeout(autoAdvanceTimeout);
+  
+  if (currentStoryIndex > 0) {
+    // Go to previous story of same user
+    const prevStoryId = stories[currentStoryIndex - 1].id;
+    console.log('Going to previous story:', prevStoryId);
+    window.location.href = '/stories/' + STORY_DATA.username + '/' + prevStoryId + '/';
+  } else {
+    console.log('Already at first story');
+  }
+}
+
+function closeStory() {
+  console.log('Closing story viewer');
+  clearInterval(progressInterval);
+  clearTimeout(autoAdvanceTimeout);
+  window.location.href = '/home/';
+}
+
+function deleteStory(storyId) {
+  console.log('Delete story called for ID:', storyId);
+  
+  if (!confirm('Delete this story?')) {
+    return;
+  }
+  
+  const csrfToken = getCookie('csrftoken');
+  console.log('CSRF token:', csrfToken);
+  
+  if (!csrfToken) {
+    alert('Security token missing. Please refresh the page.');
+    return;
+  }
+  
+  fetch(`/stories/delete/${storyId}/`, {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': csrfToken,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({})
+  })
+  .then(response => {
+    console.log('Delete response status:', response.status);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  })
+  .then(data => {
+    console.log('Delete response data:', data);
+    if (data.success) {
+      // Go to next story or close if this was the last one
+      if (totalStories > 1) {
+        nextStory();
+      } else {
+        closeStory();
+      }
+    } else {
+      alert('Error deleting story: ' + (data.error || 'Unknown error'));
+    }
+  })
+  .catch(error => {
+    console.error('Delete error:', error);
+    alert('Error deleting story: ' + error.message);
+  });
+}
+
+function viewStoryViewers(storyId) {
+  console.log('View story viewers called for ID:', storyId);
+  
+  fetch(`/stories/viewers/${storyId}/`)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.text();
+    })
+    .then(html => {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      const viewersList = doc.querySelector('.viewers-content');
+      
+      if (viewersList) {
+        document.getElementById('viewersList').innerHTML = viewersList.innerHTML;
+      } else {
+        document.getElementById('viewersList').innerHTML = '<p class="p-4 text-gray-500">No viewers yet</p>';
+      }
+      
+      document.getElementById('viewersModal').classList.remove('hidden');
+      document.getElementById('viewersModal').classList.add('flex');
+    })
+}
+
+function closeViewersModal() {
+  document.getElementById('viewersModal').classList.add('hidden');
+  document.getElementById('viewersModal').classList.remove('flex');
+}
+
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+</script>
+{% endblock %}
