@@ -13,7 +13,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <!-- Google Font for Logo -->
     <link href="https://fonts.googleapis.com/css2?family=Satisfy&display=swap" rel="stylesheet" />
-    {% tailwind_css %}
+    <!-- Tailwind CSS CDN (temporary fix) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    {% comment %}{% tailwind_css %}{% endcomment %}
 
     <style>
       .instagram-logo {
@@ -31,12 +33,6 @@
       }
       .nav-item.active svg {
         stroke-width: 2.5;
-      }
-      .nav-text {
-      }
-      .nav-item-mobile {
-      }
-      .nav-item-mobile:active {
       }
       .nav-item-mobile.active svg {
         stroke-width: 2.5;
