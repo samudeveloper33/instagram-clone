@@ -29,12 +29,7 @@ wheels/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
-/media/posts/*
-/media/avatars/*
-/media/stories/*
-!/media/posts/.gitkeep
-!/media/avatars/.gitkeep
-!/media/stories/.gitkeep
+media/
 
 
 # IDE
